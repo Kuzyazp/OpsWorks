@@ -3,4 +3,4 @@
 print("Hello World!!")
 
 from subprocess import call
-call(["ls","-la"])
+call(["telnet","smtp.gmail.com","25"])
