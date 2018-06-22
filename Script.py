@@ -5,7 +5,7 @@ import urllib.request
 
 hosts = []
 
-hosts.append("google.com")
+hosts.append("google.com") #This host is for test purpose only
 hosts.append("down.kuzyazp.tk")
 hosts.append("tcp.kuzyazp.tk")
 hosts.append("http.kuzyazp.tk")
@@ -13,7 +13,7 @@ hosts.append("http.kuzyazp.tk")
 instances = []
 
 instances.append("i-0523b84d70c4d34f3") #the one that should be stopped
-instances.append("i-076f30fc7fc4f34c2") #the one that responds ove port 22 only
+instances.append("i-076f30fc7fc4f34c2") #the one that responds over port 22 only
 instances.append("i-0e8ae3c67250eb59a") #the one that responds over HTTP and TCP
 
 for host in hosts:
