@@ -2,6 +2,9 @@
 
 import socket
 import urllib.request
+import boto3
+from termcolor import colored
+
 
 hosts = []
 
@@ -18,16 +21,25 @@ instances.append("i-0e8ae3c67250eb59a") #the one that responds over HTTP and TCP
 
 for host in hosts:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(5)
+    s.settimeout(1)
     try:
-        http_r = urllib.request.urlopen(("http://" + host), timeout=5).getcode()
+        http_r = urllib.request.urlopen(("http://" + host), timeout=1).getcode()
         print("Succesess! Response code", http_r)
     except Exception:
         print ("HTTP connection Failed")
     try:
         s.connect((host, 22))
-        print ("Port 22 reachable on host", host)
+        print("Port 22 reachable on host", host)
     except socket.error as e:
         print("Port 22 not reachable on host", host, "Error:", e)
         s.close()
 
+ec2 = boto3.resource('ec2')
+
+for i in ec2.instances.all():
+    for instance in instances:
+        if i.id == instance:
+            print("Id: {0}\tState: {1}".format(
+                colored(i.id, 'cyan'),
+                colored(i.state['Name'], 'green'),
+            ))
