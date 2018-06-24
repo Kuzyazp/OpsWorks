@@ -9,7 +9,6 @@ import datetime
 
 hosts = []
 
-hosts.append("google.com") #This host is for test purpose only
 hosts.append("down.kuzyazp.tk")
 hosts.append("tcp.kuzyazp.tk")
 hosts.append("http.kuzyazp.tk")
@@ -22,47 +21,43 @@ insts.append("i-0e8ae3c67250eb59a") #the one that responds over HTTP and TCP
 
 
 #HTTP/TCP checks
+print("Checking instances using HTTP and TCP:\n")
 for host in hosts:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(1)
     try:
         http_r = urllib.request.urlopen(("http://" + host), timeout=1).getcode()
-        print("Succesess! Response code", http_r)
+        print("HTTP connect to ", host, ": \t{0}".format(colored("Connected!", 'green')))
     except Exception:
-        print ("HTTP connection Failed")
+        print("HTTP connect to ", host, ": \t{0}".format(colored("Failed!", 'red')))
     try:
         s.connect((host, 22))
-        print("Port 22 reachable on host", host, "\n")
+        print("TCP connect to ", host, ": \t{0}\n".format(colored("Connected!", 'green')))
     except socket.error as e:
-        print("Port 22 not reachable on host", host, "Error:", e, "\n")
+        print("TCP connect to ", host, ": \t{0}\n".format(colored("Failed!", 'red')))
         s.close()
 
 ec2 = boto3.resource('ec2')
 
-#Checking Status of EC2 instances (should be moved lower later)
-for i in ec2.instances.all():
-    for inst in insts:
-        if i.id == inst:
-            print("Id: {0}\tState: {1}".format(
-                colored(i.id, 'cyan'),
-                colored(i.state['Name'], 'green'),
-            ))
-
 #Creating AMI of stopped instance
+print("\nCreating AMI of stopped instance:\n")
+
 for i in ec2.instances.all():
     for inst in insts:
         if i.id == inst and i.state['Name'] == "stopped":
             to_be_terminated_id = i.id
             current_datetime = datetime.datetime.now()
             date_stamp = current_datetime.strftime("%Y-%m-%d_%H-%M-%S")
-            ami_name = i.private_dns_name + "_" + date_stamp
-            print(ami_name)
-#            ami_id = i.create_image(
-#            Name=ami_name,
-#            NoReboot=True,
-#            )
+            ami_name = "Kuzemko A._ID" + i.id + "_" + date_stamp
+            ami_id = i.create_image(
+            Name=ami_name,
+            NoReboot=True,
+            )
+            print("\nAMI of stopped instance has been created. AMI name is:\t{0}".format(colored(ami_name, 'cyan')))
 
 
+#Stopped instance termination
+print("\nStopped instance termination")
 
 ec2 = boto3.client('ec2')
 
@@ -73,12 +68,12 @@ for i in reserv['Reservations']:
         if i1['InstanceId'] == to_be_terminated_id:
             try:
                 ec2.terminate_instances(
-                DryRun = True, #Remove Dry_Run later
+                DryRun = False,
                 InstanceIds = [to_be_terminated_id],
                 )
-                print("\nTermination Successfull!")
+                print("\nInstance with ID:", to_be_terminated_id, "has been terminated!\n")
             except:
-                print("\nTermination Successfull!\n")
+                print("\nOOOps!!\n")
 
 #AMIs cleanup
 
@@ -86,8 +81,6 @@ images_to_delete = []
 
 timediff = datetime.datetime.now() - datetime.timedelta(days=7)
 week = timediff.isoformat()
-
-
 
 response = ec2.describe_images(Owners=["717986625066"])
 
@@ -103,3 +96,17 @@ for ami_details in response['Images']:
             )
         except:
             print(image_id, "Was created on", image_created_time,". It is older than 7 days. Deleting...")
+
+#Checking Status of EC2 instances
+
+print("\n Checking statuses of all instances")
+
+ec2 = boto3.resource('ec2')
+
+for i in ec2.instances.all():
+    for inst in insts:
+        if i.id == inst:
+            print("Id: {0}\tState: {1}".format(
+                colored(i.id, 'cyan'),
+                colored(i.state['Name'], 'green'),
+            ))
